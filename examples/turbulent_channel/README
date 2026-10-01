@@ -1,0 +1,15 @@
+
+Turbulent channel simulation based on Nelson and Fringer (2017).
+
+rundata/suntans.dat includes model parameters. To test different momentum advection schemes:
+    - For original SUNTANS central-differencing: set nonlinear=2
+    - For new conservative momentums scheme: set nonlinear=0 and TVDmom to scheme of choice
+        - In current version, TVDmom=3 is Superbee, TVDmom=4 is vanLeer, and TVDmom=5 is central-differencing
+
+grid paramaters (domain size, horizontal resolution) are set in mfiles/quadgridperiodic.m. If these parameters change, uncomment the line in turb_test.sh that runs quadgrid_periodic.m and a new grid will be generated through running the test. If a different grid generator is used, place the generated grid files in rundata/ and proceed. 
+
+To run, type: 
+    make test
+  
+Which compiles the example directory and runs the turb_test.sh script
+

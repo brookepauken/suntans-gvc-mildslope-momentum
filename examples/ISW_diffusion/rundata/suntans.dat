@@ -1,0 +1,204 @@
+####################################################################
+#
+#  Input file for SUNTANS.
+#
+########################################################################
+Nkmax			60	# Number of cells in the vertical (272) (64) (184)
+maxFaces		4	# Quadgrid
+outvwgt                 0       #
+stairstep		0	# 1 if stair-stepping, 0 if partial-stepping
+rstretch		1 # Stretching factor for vertical grid (1<=rstretch<1.1) was -1.0210
+CorrectVoronoi		0	# Whether or not to correct Voronoi points
+VoronoiRatio		88	# Adjust the voronoi points by this amount if 1 then = centroid.
+vertgridcorrect 	0 	# Correct vertical grid if Nkmax is too small
+IntDepth 		0	# 1 if interpdepth, 0 otherwise
+#minimum_depth		10	# Minimum depth
+fixdzz			0	# Don't adjust bottom cells
+interp                  0       #
+kinterp                 1       # whether to use O.klepsova interpolation method
+dzsmall			0.01	# Smallest grid spacing ratio before correction
+depthelev               0       # increase the depth elevation, will decrease a same value in free surface
+scaledepth 		0 	# Scale the depth by scalefactor
+scaledepthfactor 	0 	# Depth scaling factor (to test deep grids with explicit methods)
+thetaramptime	        0  	# Timescale over which theta is ramped from 1 to theta (fs theta only)
+beta			1	# Expansivity of salt 0.0007
+im                      1       # 0 = theta, 1 = AM2, 2 = AI2 (was 1)
+ex                      1       # 0 = FE, 1 = AX2, 2 = AB2, 3 = AB3 (was 1)
+theta			0.55	# 0: fully explicit, 1: fully implicit (was .55)
+thetaS			0.55	# For scalar advection (was .55)
+thetaB			0.55	# For scalar advection
+kappa_s                 0       # Vertical mass diffusivity
+kappa_sH                0       # Horizontal mass diffusivity
+gamma 			0	# Coefficient of expansivity of temperature.
+kappa_T                 0       # Vertical thermal diffusivity
+kappa_TH                0       # Horizontal thermal diffusivity
+nu 			0.0	# Laminar viscosity of water (m^2 s^-1) 1e-4
+nu_H 			0.0    # Horizontal laminar viscosity of water (m^2 s^-1) 0.01
+tau_T			0 	# Wind shear stress
+z0T	                0.0 	# Top roughness
+z0B	                0.0	# Bottom roughness 0.0003
+Intz0T                  0       # 2 read cellcenter data, 1 interpCdT, 0 otherwise
+Intz0B                  0       # 2 read cellcenter data, 1 interpCdB, 0 otherwise
+grav			9.81e5    # Rigid lid approximation e5
+CdT	                0.0	# Drag coefficient at surface
+CdB	                0.0	# Drag coefficient at bottom (0 = free slip) (-2 for moving no slip)
+CdW			0.0	# Drag coefficient at sidewalls
+wavemodel               0       # if 1 consider wave model, 0 otherwise
+marshmodel              0       # if 1 consider marsh effects, 0 otherwise
+culvertmodel            0       # if 1 consider culvert model, 0 otherwise
+computeSediments        0       # if 1 consider sediment model 0 otherwise
+subgrid                 0       # if 1 consider subgrid model 0 otherwise
+hiter                   1       # if 1 consider iteration method to calculate h 0 otherwise
+turbmodel		0	# Turbulence model (0 for none, 1 for MY25)
+dt 			0.0706	# Time step 4.0 hydrostatic (11.75) (3.5) 
+Cmax 			1  	# Maximum permissible Courant number
+nsteps 		        81500  # Number of steps (364840) 21320 28500 79057 560000
+ntout   		500       # How often to output data 100 500
+ntprog   		10 	# How often to report progress (in %)
+ntconserve 		1	# How often to output conserved data
+nonhydrostatic		1	# 0 = hydrostatic, 1 = nonhydrostatic
+include_slope_terms	0	# Include cross terms in Poisson equation
+cgsolver		1	# 0 = GS, 1 = CG
+maxiters		1000	# Maximum number of CG iterations
+qmaxiters		2000	# Maximum number of CG iterations for nonhydrostatic pressure
+qprecond		2	# 1 = preconditioned, 0 = not preconditioned (set back to 0)
+epsilon			1e-10 	# Tolerance for CG convergence
+qepsilon		1e-10	# Tolerance for CG convergence for nonhydrostatic pressure
+resnorm			0	# Normalized or non-normalized residual
+relax			1	# Relaxation parameter for GS solver
+amp 			0	# amplitude
+omega 			0.001 # frequency 5e-4
+flux 			0	# flux
+timescale		0	# timescale for open boundary condition
+volcheck		0	# Check for volume conservation
+masscheck		0	# Check for mass conservation
+nonlinear		0	# Old momentum advection: 0 for new scheme, first-order upwind: 1, Central-differencing: 2
+TVDmomentum		5	# New scheme for momentum: 3 for Superbee, 4 for van Leer, 5 for central-differencing
+TVDsalt			6	# Salt TVD
+TVDtemp			6	# Temp TVD
+newcells		0	# 1 if adjust momentum in surface cells as the volume changes, 0 otherwise
+wetdry			0       # 1 if wetting and drying, 0 otherwise
+Coriolis_f              0	# Coriolis frequency f=2*Omega*sin(phi)
+sponge_distance	        0 5e3 	# Decay distance scale for sponge layer
+sponge_decay	        0 1000	# Decay time scale for sponge layer
+readSalinity		0	# Whether or not to read initial salinity profile from file InitSalinityFile
+readTemperature		0	# Whether or not to read initial temperature profile from file InitTemperatureFile
+readOldVelocity		1	# Whether or not to read uold from file
+pressureMethod      1 #pressure method (0 is projection), default is 1
+movingBed	    0 #make bed move i hope
+#wavelength 	    0 #wavelength of bedform
+advectSalinity		0	# Whether or not to advect salinity (don't with isopycnal)
+advectTemperature          0      # Whether or not to advect salinity (don't with isopycnal)
+botLayers           0 # Number of bottom layers in hybrid vert coordinate
+midLayers           0 # Number of mid layers in hybrid vert coordinate
+cuttoffDepth           0 # Depth (distance from top) below which botLayers start
+########################################################################
+#
+#  Grid Files
+#
+########################################################################
+pslg   twod.dat 	# Planar straight line graph (input)
+points points.dat	# Vertices file (input)
+edges edges.dat		# Edge file (input)
+cells cells.dat		# Cell centered file (input)
+depth depth.dat	        # Depth file for interpolation (if INTERPDEPTH=1) (input)
+nodes nodes.dat         # Node topology information (output)
+celldata celldata.dat	# Cell-centered output (output)
+edgedata edgedata.dat	# Edge-centered output (output)
+vertspace vertspace.dat	# Vertical grid spacing (output)
+topology topology.dat	# Grid topology data
+vwgt      vwgt.dat      #
+########################################################################
+#
+#  Output Data Files
+#
+########################################################################
+FreeSurfaceFile   	fs.dat
+z0TFile                 z0t.dat
+z0BFile                 z0b.dat
+HorizontalVelocityFile 	u.dat
+VerticalVelocityFile 	w.dat
+SalinityFile 		s.dat
+BGSalinityFile 		s0.dat
+TemperatureFile		T.dat
+PressureFile		q.dat
+VerticalGridFile 	g.dat
+ConserveFile		e.dat
+ProgressFile	        step.dat
+StoreFile		store.dat
+StartFile		start.dat
+EddyViscosityFile	nut.dat
+ScalarDiffusivityFile	kappat.dat
+zBofflineFile		zBoff.dat
+########################################################################
+#
+# Input Data Files
+#
+########################################################################
+InitSalinityFile	sinit.dat
+InitTemperatureFile	Tinit.dat
+TideInput		tidecomponents.dat
+TideOutput		tidexy.dat
+Inputz0BFile            z0bint.dat
+Inputz0TFile            z0tint.dat
+sediment                sedi.dat
+marsh                   marsh.dat
+wave                    wave.dat
+culvert                 culvert.dat
+########################################################################
+#
+# General vertical coordinate data
+#
+########################################################################
+vertcoord               4  # 2 = iso, 4 = variational, 3 = sigma
+zcFile                  vert_zc.dat
+dzzFile                 vert_dzz.dat
+omegaFile               vert_omega.dat
+modifydzf               0 #
+vertdzmin		1e-5 # Minimum layer height
+dzfmeth			6 # Superbee for layer heights
+#mergeArrays		0 # Don't merge
+########################################################################
+#
+# Output data to analyze time series of u(z,t) and s(z,t) at 3
+# locations.
+#
+########################################################################
+ProfileVariables	us       # Only output salinity and currents
+DataLocations	dataxy.dat       # dataxy.dat contains column x-y data
+ProfileDataFile	profdata.dat     # Information about profiles is in profdata.dat
+ntoutProfs		100000        # Output profile data every 2 time steps
+NkmaxProfs		0        # Output all z levels
+numInterpPoints 	1        # Output 1 data point at the nearest neighbor.
+########################################################################
+#
+# Initialization files contain the full 2 or 3d fields in them
+#
+########################################################################
+init_u_from_file	1          # Read u_init_file to initialize U = u n1 + v n2
+init_u_t1_from_file	1          # Read u0_tminus1_file to initialize U(t0-dt) = u n1 + v n2
+init_u_t2_from_file     1          # Read u0_tminus2_file to initialize U(t0-2*dt) = u n1 + v n2
+init_w_from_file 	1	   # Read initial w 
+init_w_t1_from_file	1          # Read w0_tminus1_file to initialize W(t0-dt)
+init_w_t2_from_file	1          # Read w0_tminus2_file to initialize W(t0-2*dt)
+init_s_from_file	1          # Read s_init_file to initialize salinity
+init_st_from_file	1	   # Read s_t1 file
+init_T_from_file	1          # Read T_init_file to initialize temperature
+init_q_from_file        0          # Read q_init_file to initialize pressure
+init_fs_from_file	1          # Read fs_init_file to initialize free surface
+u_init_file		u_init.dat # Initial u velocity
+w_init_file             w_init.dat # Initial w velocity
+u0_tminus1_file		u_t1.dat # Initial u velocity at t = t0 - dt
+u0_tminus2_file		u_t2.dat # Initial u velocity at t = t0 - 2*dt
+w0_tminus1_file		w_t1.dat # Initial w velocity at t = t0 - dt
+w0_tminus2_file		w_t2.dat # Initial w velocity at t = t0 - 2*dt
+s_init_file		s_init.dat # Initial salinity
+s_t1_init_file		s_t1.dat #salinity at t-1
+s_t2_init_file          s_t2.dat #salinity at t-1
+q_init_file		q_init.dat # initial nonhydrostatic pressure
+T_init_file		T_init.dat # Initial temperature
+fs_init_file		fs_init.dat # Initial free surface
+dzz_init_file 		dzz_init.dat #Initial layer heights
+dzz_t1_init_file	dzz_init_t1.dat #layer heights one timestep back
+dzz_t2_init_file        dzz_init_t2.dat #layer heights one timestep back
+dzz_t3_init_file        dzz_init_t3.dat #layer heights one timestep back

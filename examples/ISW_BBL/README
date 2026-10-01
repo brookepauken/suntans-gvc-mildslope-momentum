@@ -1,0 +1,34 @@
+Single solitary wave initialized with DJL equation using DJLES 1.11 in matlab set up for bounday layer test
+
+The wave is initialized in the mfile mfiles/write_initial_DJL.m
+which reads in the grid from suntans output and creates input files for the
+velocity field (the dot product of u with the normal), density (salinity), and free surface based on a desired wave APE. The generation will work for sigma, hybrid, or isopycnal coordinates. 
+
+Set vertcoord = 2 for sigma/z-level (since it is a rigid lid) and vertcoord = 4 for iso/hybrid. Hybrid layer counts are set in suntans.dat as well. 
+The midlayers set in suntans.dat is used in the suntans update step. However, a different midlayers value likely needs to be set in the matlab initialization code 
+in order to generate that many midlayers after removing large isopycnals, etc. This value is set in the mfile directly. It is generally 1-2 less than the listed 
+suntans midlayers value and can be checked by checking the stretching of the mid layers. 
+
+Be sure to set advectSalinity and advectTemp to 0 for isopycnals and 1 otherwise.
+
+For QUICK, set any TVD variable in suntans.dat to 5. For SHARP, set to 6.
+
+"Make test" will run the script BL_test.sh.
+
+Nx, sh_val, and Atarget are all set directly in the script and are currently set to reasonable values. sh_val is 10x the fractional height of the pycnolcine (ie sh_val=2 will have the pycnocline at -0.2*H) and Atarget is the target APE for the DJL solver, which will lead to a certain amplitude. 
+
+rundata/suntans.dat includes model parameters. To test different momentum advection schemes:
+    - For original SUNTANS central-differencing: set nonlinear=2
+    - For new conservative momentums scheme: set nonlinear=0 and TVDmom to scheme of choice
+        - In current version, TVDmom=3 is Superbee, TVDmom=4 is vanLeer, and TVDmom=5 is central-differencing
+
+grid paramaters (domain size, horizontal resolution) are set in mfiles/quadgridperiodic.m. If a different grid generator is used, comment out the line in the script that runs quadgridperiodic.m, place the generated grid files in rundata/ and proceed. 
+
+To run, type: 
+    make test
+  
+Which compiles the example directory and runs the BL_test.sh script
+
+Current grid is 10x or so less resolved than it should be to allow for quick testing. 
+
+Requires parallel toolbox in Matlab for init.

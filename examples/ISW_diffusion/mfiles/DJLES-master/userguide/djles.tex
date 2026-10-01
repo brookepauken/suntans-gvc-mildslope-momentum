@@ -1,0 +1,227 @@
+\documentclass[letterpaper]{article}
+\usepackage{amsmath} 
+\usepackage{fullpage}
+\usepackage{natbib}
+\usepackage{textcomp}
+\usepackage{color}
+\definecolor{darkblue}{rgb}{0.0,0.0,0.9}
+\usepackage[colorlinks=true,urlcolor=darkblue,linkcolor=black,citecolor=darkblue]{hyperref}
+
+\newcommand{\deriv}[2]{\frac{\mathrm{d}#1}{\mathrm{d}#2}}
+
+\begin{document}
+\newpage
+\pagestyle{plain}
+\setcounter{page}{1}
+
+\begin{center}
+\huge{DJLES: Dubreil-Jacotin-Long Equation Solver}\\[1em]
+\large{Feb 8, 2019}\\
+Michael Dunphy
+\end{center}
+
+\section{Introduction}
+DJLES is a MATLAB/Octave package that finds a mode-one solution to the DJL equation. \cite{StastnaLamb2002} describe the problem setup, weakly nonlinear theory, fully nonlinear theory, and iterative solution procedure. DJLES was inspired by \verb+soliw+, a DJL solving C package resulting from the work of~\cite{StastnaLamb2002}.
+
+DJLES differs from \verb+soliw+ by being MATLAB based, which avoids the need to compile C code and manage the resulting raw binary files. When used with MATLAB, it also takes advantage of the built in parallelisation of FFTs which accelerates solution on multi-core computers. Lastly, it easily employs the resolution refinement approach of~\cite{DunphySubichStastna2011}, a feature not available in \verb+soliw+.
+
+If you find this code useful, please cite~\cite{DunphySubichStastna2011} as it will encourage the author to maintain/improve DJLES. Bug reports, fixes/improvements and additional case files are welcome; please contact \href{mailto:mdunphy@uwaterloo.ca}{mdunphy@uwaterloo.ca} for inclusion in a future version.
+
+DJLES has benefited from contributions from Marek Stastna, Kevin Lamb, Chris Subich, Derek Steinmoeller, Jorge Magalh\~aes and Jos\'e da Silva.
+
+The remainder of this document is a user guide for the code.
+
+\section{Quickstart}
+Download the code and run one of the case files in either MATLAB or Octave. The case files take less than one minute to run on a recent desktop computer, and may need 2-3 minutes on an older system. Upon completion the code will produce a plot of the wave.
+
+\section{Usage}
+Typical usage is to set problem parameters, then call \verb+djles_refine_solution+ to solve the DJL equation, which returns the isopycnal displacement field $\eta$ and wave speed $c$ in MATLAB variables \verb+eta+ and \verb+c+, respectively. The required problem parameters are:
+\begin{itemize}
+ \item $L$ and $H$ -- Domain length and depth (m)
+ \item $N_x$ and $N_z$ -- Number of grid points in $x$ and $z$
+ \item $\bar{\rho}(z)$ and $\deriv{}{z} \bar{\rho}(z)$
+       -- Background density profile and first derivative
+       \begin{itemize}
+        \item If using full density, also provide reference density parameter \verb+rho0+.
+        \item If using non-dimensional density, DJLES will assume \verb+rho0=1+.
+       \end{itemize}
+ \item $A$ -- Target available potential energy (per unit in $y$)
+       \begin{itemize}
+        \item If using full density, units are kg m/s$^2$.
+        \item If using non-dimensional density, units are m$^4$/s$^2$.
+       \end{itemize}
+ \item $U_{bg}(z)$, $\deriv{}{z} U_{bg}(z)$, and $\deriv{^2}{z^2} U_{bg}(z)$
+       -- Background velocity profile (m/s) and first two derivatives
+\end{itemize}
+If a background velocity is not desired, set it to zero (see test cases). 
+Once the solution is complete, \verb+djles_diagnostics+ computes the associated velocity fields, vorticity, etc., \verb+djles_pressure+ computes the pressure, and \verb+djles_plot+ produces a simple plot of these fields.
+
+During the first call to \verb+djles_refine_solution+, we use weakly nonlinear theory to find an initial guess for the solution, which is then iterated to convergence. Subsequent calls to \verb+djles_refine_solution+ use the previous fully nonlinear solution as the initial guess. This allows for the strategy of successively adjusting parameters (resolution, wave APE, etc) to ease/accelerate finding a solution. The various test cases demonstrate several solution scenarios.
+
+\subsection{Tuning knobs}
+There are a few tuning knobs. Set them in the case file to override the default.
+\begin{itemize}
+ \item \verb+min_iterate+ specifies the minimum number of iterations that the solver will take, default is 10.
+ \item \verb+max_iterate+ specifies the maximum number of iterations that the solver will take, default is 2000. If you use a very small \verb+epsilon+ or \verb+relax+ you may need to increase this. 
+ \item \verb+NL+ is the number of Legendre points to use for the Gauss quadrature used for the APE integral. Values below 5 are probably too small, values in 15--25 are quite good, and values higher than 25 are likely unnecessary. Default is 20.
+ \item \verb+relax+ is the underrelaxation factor, $0 < \verb+relax+ <= 1$.
+        The value is the fraction of the new iteration, $\eta^{k*}$ to retain
+        after performing an iteration, that is,
+        $\eta^k = \eta^{k-1} + \verb+relax+(\eta^{k*} - \eta^{k-1})$.
+        The default of 0.5 works well in most cases, and a value of 1 disables underrelaxation.
+        Using a small value can help stabilise the solver at the expense of needing more iterations.
+ \item \verb+g+ is the gravitational acceleration constant, default value is 9.81 m/s$^2$.
+ \item \verb+verbose+ controls the verbosity of status updates. A value of 0 disables printing, a value $\ge 1$ enables printing updates after each iteration, and a value $\ge 2$ enables printing of timing data upon completion. Default is 1.
+\item \verb+epsilon+ controls the stop condition, which is the relative difference between successive iterations. Default $1\times10^{-4}$. Smaller values will require more solver iterations.
+\end{itemize}
+
+\subsection{Miscellaneous}
+
+A successful solve will have a relative error of roughly \verb+epsilon+/\verb+relax+ decimal places in $\eta$. Using a small value of \verb+relax+ should be accompanied with a reduction in \verb+epsilon+.
+
+If the solver fails to converge, 
+\begin{enumerate}
+ \item Ensure that your density profile $\rho(z)$ is stably stratified.
+ \item Run the solver with a smaller underrelaxation factor. A value of 0.1 or even 0.01 may suppress oscillations and stabilise the solver. 
+ \item Ensure that your density profile (and first derivative) is smooth.
+ \item Ensure that the domain width $L$ is wide enough to contain the wave. The boundary conditions for the problem are $\eta=0$ on all boundaries; if your domain is too narrow it will be enforcing that condition at the wrong location.
+\end{enumerate}
+
+\subsection{Compatibility notes}
+\begin{itemize}
+ \item Tested with MATLAB R2013a (Linux 64-bit and Windows), R2012a (OSX 10.6.8).
+ \item Tested with Octave v3.8.1, v4.0.1 and v4.4.1 (Linux 64-bit).
+ \item The initial guess part uses \verb+polyeig.m+, and Octave added it in v3.8.0, so it's unlikely to work with Octave older than v3.8.0.
+ \item MATLAB R2014a prints warnings about deprecating \verb+ppval+, you can suppress the warnings with \\ \verb+warning('off','MATLAB:interp1:ppGriddedInterpolant');+
+\end{itemize}
+
+\subsection{Numerical Grid}
+The domain is the rectangular region $[0,L] \times [-H,0]$ and is discretized into $N_x\times N_z$ grid boxes. The boundary conditions for the problem are zero, and we use the cell centres for the coordinates, that is,
+\begin{align}
+x_i^c &= \frac{\Delta x}{2} + i \Delta x, \quad i \in 0,1,2,\ldots,N_x-1,\\
+z_j^c &= -H + \frac{\Delta z}{2} + j \Delta z, \quad j \in 0,1,2,\ldots,N_z-1,
+\end{align}
+where $(\Delta x, \Delta z) = (L/N_x, H/N_z)$. The grid shifting routine \verb+djles_shift_grid.m+ shifts the data from the cell centres to cell edges, 
+\begin{align}
+x_i^e &= i \Delta x, \quad i \in 0,1,2,\ldots,N_x\\
+z_j^e &= -H + j \Delta z, \quad j  \in 0,1,2,\ldots,N_z.
+\end{align}
+The array sizes are $N_x+1 \times N_z+1$ on the cell edges grid.
+
+\section{Description of M-files}
+The code consists of a handful of functions, scripts, and test cases.
+
+\subsection{Scripts}
+The scripts are
+\begin{verbatim}
+Filename                  - Description
+-----------------------------------------------------------------------------------------
+djles_common.m            - Sets default parameters and generates grid and wavenumbers.
+djles_diagnostics.m       - Computes wave velocities, vorticity, etc from eta and c.
+djles_initial_guess.m     - Used by djles_refine_solution.m to get an initial guess for
+                            eta & c from WNL theory if an initial guess is not provided.
+djles_plot.m              - Plots the solution and some diagnostics.
+djles_pressure.m          - Computes the non-hydrostatic pressure and residuals in the
+                            governing equations. Uses results from djles_diagnostics.m.
+djles_refine_solution.m   - This is the main m-file that each case files calls. It
+                            performs the iterative procedure to find a wave solution.
+\end{verbatim}
+
+\subsection{Helper Functions}
+The helper functions are
+\begin{verbatim}
+djles_change_resolution.m - Changes the resolution of the solution.
+djles_compute_apedens.m   - Computes the available potential energy density.
+djles_diffmatrix.m        - Generates a finite difference differentiation matrix for use
+                            in the initial guess procedure.
+djles_extend.m            - Extends the input data using specified symmetry.
+djles_gradient.m          - Computes the gradient of input data.
+djles_quadweights.m       - Returns the 1-dimensional interior grid quadrature weights.
+djles_residual.m          - Computes the residual in the DJL equation.
+djles_shift_grid.m        - Shifts the input data from cell centres to cell endpoints.
+djles_sinequadrature.m    - Computes the interior grid sine quadrature weights for
+                            area integrals.
+djles_wavelength.m        - Computes an estimate of the wavelength.
+\end{verbatim}
+
+\subsection{Test cases}
+Included are eight test cases that demonstrate how to use DJLES. A brief description of each follows.
+
+\subsubsection{Small APE}
+Test case: \verb"case_small_ape.m" \\\\
+This test case demonstrates the parameter regime of no background current, a smooth pycnocline, and small wave APE.
+The initial guess obtained from weakly nonlinear theory will be ``close'' to the fully nonlinear DJL solution, so the solver readily converges.
+Once we find the low resolution wave (32$\times$32), we increase the resolution to 512$\times$256 and iterate to convergence.
+The low resolution solution is a very good initial guess for the high resolution problem, so the high resolution wave is also readily solved.
+
+\subsubsection{Large APE}
+Test case: \verb"case_large_ape.m" \\\\
+This test case demonstrates the parameter regime of no background current, a smooth pycnocline, and large wave APE.
+The initial guess from weakly nonlinear theory will be rather poor. 
+The solution strategy we use is to find a wave with a small APE, and supply that wave as the initial guess to find a wave with a larger APE.
+Applying this several times yields the final wave with a large APE.
+In this case we start at one percent of the target APE and raise the APE in five steps.
+Lastly, we increase the resolution once we reach the target APE.
+The result is a broad flat crested wave.
+
+\subsubsection{Background current}
+Test case: \verb"case_ubg.m" \\\\
+We use the same successive solution strategy here by solving without a background current first,
+and then raise the background current strength in increments until we reach the full background current.
+We increase epsilon for the intermediate solutions to accelerate the process as we only need them to be of ``initial guess'' quality.
+Lastly, we reduce epsilon, and increase the resolution in two increments.
+
+\subsubsection{Sharp pycnocline}
+Test case: \verb"case_sharp_pycnocline.m" \\\\
+Obtaining a solution with a sharp pycnocline can be difficult for the solver to find directly, and the successive solution strategy works here as well.
+We begin with a low-resolution wide-pycnocline that is readily solved and begin successively reducing the pycnocline thickness.
+As we sharpen the pycnocline, we also increase the resolution such that the pycnocline is not under-resolved.
+
+\subsubsection{Synthetic data}
+Test case: \verb"case_synthetic_data.m" \\\\
+This case matches the parameters of the background current case, except that we use synthetic mooring data as the background profiles.
+We sample the analytic functions at 25 evenly spaced points and construct continuous profiles using linear interpolating polynomials.
+Second order differentiation provides the gradients, which are linearly interpolated in the same fashion.
+The \verb+linear+ and \verb+pchip+ interpolation methods preserve monotonocity which is important to ensure the interpolated density profile is stable.
+The \verb+spline+ method does not preserve monotonicity so be careful if you use it.
+As in \verb"case_ubg.m", we raise the background velocity in four successive steps, followed by three resolution refinements.
+
+\subsubsection{Lake Erie data}
+Test case: \verb"case_lakeerie.m" \&  \verb"case_lakeerie.txt" \\\\
+Here we use time-averaged temperature profile data collected from Lake Erie (K.~Lamb 2014, pers.~comm.).
+The text file contains two columns, depth (m) and temperature (\textdegree C), and we convert the temperature to density with a linear equation of state.
+There is no surface value so we extrapolate to find a value for $z=0$.
+We construct the density and density gradient in the same fashion as in the synthetic data case, and use no background current.
+We solve the wave at low resolution and then raise the resolution in two steps.
+
+\subsubsection{Pineda et al. (2015)}
+Test case: \verb"case_pineda.m" \&  \verb"case_pineda_cast1.txt" \\\\
+This case is intended as a typical shallow continental shelf case where we reproduce the DJL solutions shown in~\cite{PinedaEtAl2015}.
+The text file contains two columns, depth (m) and density (kg/m$^3$), and is an approximate reproduction (courtesy Jorge Magalh\~aes and Jos\'e da Silva) of the smoothed curve of Fig 9a.
+We use the full density and set the reference density \verb+rho0+ as the maximum value, and construct the density and first derivative functions as in the synthetic data case.
+
+The first part of the script finds the wave showcased in Figure 11.
+After raising the target APE in a few steps at low resolution and large epsilon, we apply several steps of resolution refinement with epsilon reductions.
+The relative residual of the final wave is order $4\times 10^{-7}$, and matches~\cite{PinedaEtAl2015} to three significant figures in wave height ($-14.1176$ m vs. $-14.1$ m) and two significant figures in phase speed (0.585978 m/s vs. 0.585 m/s).
+
+The second part of the script reproduces the solid curves of Figure 10.
+We sweep over a range of target APE values and record the wave height, phase speed, and velocity and pressure one metre above the bottom.
+Each wave is reused as the initial guess for the next APE value as the sweep progresses. 
+
+Lastly, we note there is a difference in amplitude between the pressure reported in~\cite{PinedaEtAl2015} and that computed by DJLES (Figures 10c and 11c).
+We compute residuals by substituting the wave fields into the Boussinesq equations moving with the wave (see bottom part of \verb+djles_pressure.m+), and find that the residuals are appropriately small, which indicates that the pressure computed by DJLES is correct.
+
+\subsubsection{Amazon River mouth data}
+Test case: \verb"case_amazon.m" \&  \verb"case_amazon.txt" \\\\
+This case is intended to find the maximum wave amplitude for internal solitary waves on the continental shelf near the mouth of the Amazon River.
+The included text file contains three columns: depth (m), density (kg/m$^3$) and velocity (m/s) projected along the wave direction of propagation (data courtesy of Jorge Magalh\~aes and Jos\'e da Silva).
+
+The density profile has inversions, so we make ad-hoc adjustments to ensure that the first derivative is always negative (and thus $N^2(z)$ is always positive).
+Much like the other cases, we start with a small amplitude at low resolution, and incrementally raise the values until we reach a high resolution wave of 35.3 m amplitude.
+This wave is near its amplitude limit; further increases to the APE will expand the wave as a broad flat crested wave and a larger domain is needed to calculate such a wave.
+
+% References
+\bibliographystyle{kbib}
+\bibliography{djles}
+
+\end{document}
